@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=1200, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/simpledotcss/simple.min.css">
+    <title>Wreckorder</title>
+</head>
+<body>
+    <header>
+        <h1>Wreckorder</h1>
+    </header>
+    <main>
+        <form action="">
+            <label for="name">Session name</label>
+            <input type="text" name="name" id="name">
+            <select name="videoInput" id="videoInput"></select>
+        </form>
+        <div>
+            <video width="400" height="300" autoplay muted id="cameraPreview"></video>
+        </div>
+        <div>
+            <b id='camera-status'></b>
+            <button id='record'>Record</button>
+            <button id='stop' disabled>Stop</button>
+            <button id='download' disabled>Download</button>
+            <p id="status"></p>
+        </div>
+
+    </main>
+    <script src="wreckorder.js"></script>
+</body>
+</html>
