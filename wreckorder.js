@@ -22,7 +22,7 @@ async function preview() {
 
 }
 
-async function record() {
+async function record(state) {
     const name = document.querySelector('input#name').value
     const status = document.querySelector('#status')
     if (name == '') {
@@ -38,11 +38,12 @@ async function record() {
     const screen = await navigator.mediaDevices.getDisplayMedia({video: true, audio: false})
     const screenRecorder = new MediaRecorder(screen, {mimeType})
 
-    const cameraData = []
-    const screenData = []
+    state.cameraData = []
+    state.screenData = []
+    state.name = name
 
-    recorder.ondataavailable = (e) => cameraData.push(e.data)
-    screenRecorder.ondataavailable = (e) => screenData.push(e.data)
+    recorder.ondataavailable = (e) => state.cameraData.push(e.data)
+    screenRecorder.ondataavailable = (e) => state.screenData.push(e.data)
 
     await Promise.all([recorder.start(), screenRecorder.start()])
 
@@ -55,16 +56,15 @@ async function record() {
         await Promise.all([recorder.stop(), screenRecorder.stop()])
         screen.getTracks().forEach(track => track.stop())
         camera.getTracks().forEach(track => track.stop())
-        console.log('Recording stopped')
         stopButton.disabled = true
         const downloadButton = document.querySelector('button#download')
         downloadButton.disabled = false
-        downloadButton.addEventListener('click', () => {
-            downloadMedia(cameraData, `${name}-camera`)
-            downloadMedia(screenData, `${name}-screen`)
-        })
-
     })
+}
+
+function download(state) {
+    downloadMedia(state.cameraData, `${state.name}-camera`)
+    downloadMedia(state.screenData, `${state.name}-screen`)
 }
 
 async function fillCamerasSelection() {
@@ -93,9 +93,19 @@ async function init() {
     })
 }
 
+function reset(state) {
+    state = {}
+    document.querySelector('button#download').disabled = true
+    document.querySelector('button#record').disabled = false
+    document.querySelector('button#stop').disabled = true
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('button#record').addEventListener('click', record)
-    
+    const state = {}
+    document.querySelector('button#record').addEventListener('click', () => record(state))
+    document.querySelector('button#download').addEventListener('click', () => download(state))
+    document.querySelector('button#reset').addEventListener('click', () => reset(state))
+
     document.querySelector('select#videoInput').addEventListener('change', preview)
     
     init().then(() => navigator.mediaDevices.getUserMedia({video: true, audio: true}))
