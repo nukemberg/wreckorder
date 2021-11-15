@@ -13,9 +13,18 @@
     </header>
     <main>
         <form action="">
-            <label for="name">Session name</label>
-            <input type="text" name="name" id="name">
-            <select name="videoInput" id="videoInput"></select>
+            <p>
+                <label for="name">Session name</label>
+                <input type="text" name="name" id="name">
+            </p>
+            <p>
+                <label for="videoInput">Camera</label>
+                <select name="videoInput" id="videoInput"></select>
+            </p>
+            <p>
+                <label for="audioInput">Audio</label>
+                <select name="audioInput" id="audioInput"></select>
+            </p>
         </form>
         <div>
             <video width="400" height="300" autoplay muted id="cameraPreview"></video>

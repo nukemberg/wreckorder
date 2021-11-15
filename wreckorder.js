@@ -32,8 +32,9 @@ async function record(state) {
         status.innerHTML = ''
     }
 
-    const deviceId = document.querySelector('select#videoInput').value
-    const camera = await navigator.mediaDevices.getUserMedia({video: {deviceId}, audio: true})
+    const videoDeviceId = document.querySelector('select#videoInput').value
+    const audioDeviceId = document.querySelector('select#audioInput').value
+    const camera = await navigator.mediaDevices.getUserMedia({video: {deviceId: videoDeviceId}, audio: {deviceId: audioDeviceId}})
     const recorder = new MediaRecorder(camera, {mimeType})
     const screen = await navigator.mediaDevices.getDisplayMedia({video: true, audio: false})
     const screenRecorder = new MediaRecorder(screen, {mimeType})
@@ -67,18 +68,27 @@ function download(state) {
     downloadMedia(state.screenData, `${state.name}-screen`)
 }
 
+
+function fillSelectDevices(selectBox, devices) {
+    selectBox.innerHTML = ''
+    devices.forEach(device => {
+        const opt = document.createElement('option')
+        opt.text = device.label || device.deviceId
+        opt.value = device.deviceId
+        selectBox.add(opt)
+    })
+}
+
 async function fillCamerasSelection() {
     const selectBox = document.querySelector('select#videoInput')
-    selectBox.innerHTML = ''
     const devices = await navigator.mediaDevices.enumerateDevices()
-    devices.forEach(device => {
-        if (device.kind == 'videoinput') {
-            const opt = document.createElement('option')
-            opt.text = device.label || device.deviceId
-            opt.value = device.deviceId
-            selectBox.add(opt)
-        }
-    })
+    fillSelectDevices(selectBox, devices.filter(device => device.kind == 'videoinput'))
+}
+
+async function fillAudioSelection() {
+    const selectBox = document.querySelector('select#audioInput')
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    fillSelectDevices(selectBox, devices.filter(device => device.kind == 'audioinput'))
 }
 
 async function init() {
@@ -87,9 +97,16 @@ async function init() {
         fillCamerasSelection()
     }
 
+    const audioPermissions = await navigator.permissions.query({name: 'microphone'})
+
+    if (audioPermissions.state == 'granted') {
+        fillAudioSelection()
+    }
+
     cameraPermissions.addEventListener('change', async function (e) {
         console.log('permissions changed: ' + cameraPermissions.state)
         fillCamerasSelection()
+        fillAudioSelection()
     })
 }
 
