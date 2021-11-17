@@ -1,5 +1,4 @@
-const mimeType = 'video/webm; codecs=vp8'
-function downloadMedia(data, name) {
+function downloadMedia(data, mimeType, name) {
     const url = URL.createObjectURL(new Blob(data, {type: mimeType}))
     const a = document.createElement('a')
     document.body.appendChild(a)
@@ -19,7 +18,6 @@ async function preview() {
 
     video.srcObject = camera
     video.captureStream()
-
 }
 
 async function record(state) {
@@ -34,6 +32,14 @@ async function record(state) {
 
     const videoDeviceId = document.querySelector('select#videoInput').value
     const audioDeviceId = document.querySelector('select#audioInput').value
+    const codec = document.querySelector('select#codec').value
+    const mimeType = `video/webm; codecs=${codec}`
+
+    const video = document.querySelector('video#cameraPreview')
+    video.pause()
+    video.srcObject = null
+    
+
     const camera = await navigator.mediaDevices.getUserMedia({video: {deviceId: videoDeviceId}, audio: {deviceId: audioDeviceId}})
     const recorder = new MediaRecorder(camera, {mimeType})
     const screen = await navigator.mediaDevices.getDisplayMedia({video: true, audio: false})
@@ -42,6 +48,7 @@ async function record(state) {
     state.cameraData = []
     state.screenData = []
     state.name = name
+    state.mimeType = mimeType
 
     recorder.ondataavailable = (e) => state.cameraData.push(e.data)
     screenRecorder.ondataavailable = (e) => state.screenData.push(e.data)
@@ -64,8 +71,8 @@ async function record(state) {
 }
 
 function download(state) {
-    downloadMedia(state.cameraData, `${state.name}-camera`)
-    downloadMedia(state.screenData, `${state.name}-screen`)
+    downloadMedia(state.cameraData, state.mimeType, `${state.name}-camera`)
+    downloadMedia(state.screenData, state.mimeType, `${state.name}-screen`)
 }
 
 
@@ -91,6 +98,24 @@ async function fillAudioSelection() {
     fillSelectDevices(selectBox, devices.filter(device => device.kind == 'audioinput'))
 }
 
+function fillCodecSelection() {
+    const selectBox = document.querySelector('select#codec')
+    const codecs = [
+        'vp8',
+        'vp9',
+        'h264'
+    ]
+
+    codecs
+        .filter(codec => MediaRecorder.isTypeSupported(`video/webm; codecs=${codec}`))
+        .forEach(codec => {
+            const opt = document.createElement('option')
+            opt.text = codec
+            opt.value = codec
+            selectBox.add(opt)
+        })
+}
+
 async function init() {
     const cameraPermissions = await navigator.permissions.query({name: 'camera'});
     if (cameraPermissions.state == 'granted') {
@@ -103,6 +128,8 @@ async function init() {
         fillAudioSelection()
     }
 
+    fillCodecSelection()
+
     cameraPermissions.addEventListener('change', async function (e) {
         console.log('permissions changed: ' + cameraPermissions.state)
         fillCamerasSelection()
@@ -112,9 +139,14 @@ async function init() {
 
 function reset(state) {
     state = {}
+
     document.querySelector('button#download').disabled = true
     document.querySelector('button#record').disabled = false
-    document.querySelector('button#stop').disabled = true
+    const stop = document.querySelector('button#stop')
+    stop.click()
+    stop.disabled = true
+    
+    preview()
 }
 
 document.addEventListener('DOMContentLoaded', () => {
