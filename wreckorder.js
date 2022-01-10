@@ -103,7 +103,9 @@ function fillCodecSelection() {
     const codecs = [
         'vp8',
         'vp9',
-        'h264'
+        'h264',
+        'h264,opus',
+        'vp8,opus'
     ]
 
     codecs
